@@ -96,6 +96,11 @@ def get_mask(feats, f, dataset, feat_type):
         masks_l = get_mask(feats, f.left, dataset, feat_type)
         masks_r = get_mask(feats, f.right, dataset, feat_type)
         return masks_l | masks_r
+    #adding XOR
+    elif isinstance(f, FM.Xor):
+        masks_l = get_mask(feats, f.left, dataset, feat_type)
+        masks_r = get_mask(feats, f.right, dataset, feat_type)
+        return masks_l ^ masks_r
     elif isinstance(f, FM.Not):
         masks_val = get_mask(feats, f.val, dataset, feat_type)
         return 1 - masks_val
@@ -203,7 +208,8 @@ def get_max_ofis(states, feats, dataset):
 OPS = defaultdict(
     list,
     {
-        "all": [(FM.Or, False), (FM.And, False), (FM.And, True)],
+        #Addind XOR temporarily remove "(FM.Or, False), (FM.And, False), (FM.And, True),"" 
+        "all": [(FM.Or, False), (FM.And, False), (FM.And, True), (FM.Xor, False)],
         "lemma": [(FM.Neighbors, False)],
         # WordNet synsets. For now just do hypernyms? Note: for hypernyms - how far
         # up to go? Go too far = activates for all synsets. Too low = ?
@@ -213,7 +219,6 @@ OPS = defaultdict(
         # ALSO: don't forget glove vectors
     },
 )
-
 
 def compute_iou(formula, acts, feats, dataset, feat_type="word"):
     masks = get_mask(feats, formula, dataset, feat_type)
@@ -338,9 +343,23 @@ def compute_best_sentence_iou(args):
             )
             formulas[new_formula] = new_iou
 
+# Print out to shell
+    #for f, score in formulas.items():
+     #   for f, score in formulas.items():
+      #      print(f.to_str(lambda i: dataset["itos"][i], sort=True), " -> ",score)
+    #input("Concept formulas scored. Press Enter To continue")
+    
+
+
     nonzero_iou = [k.val for k, v in formulas.items() if v > 0]
     formulas = dict(Counter(formulas).most_common(settings.BEAM_SIZE))
     best_noncomp = Counter(formulas).most_common(1)[0]
+
+    #Print step 
+    #for f, score in formulas.items():
+     #   print(f.to_str(lambda i: dataset["itos"][i], sort=True), score)
+    #input("Post triming concepts by score. Enter To continue")
+
 
     for i in range(settings.MAX_FORMULA_LENGTH - 1):
         new_formulas = {}
@@ -363,6 +382,10 @@ def compute_best_sentence_iou(args):
         formulas.update(new_formulas)
         # Trim the beam
         formulas = dict(Counter(formulas).most_common(settings.BEAM_SIZE))
+        #print(formulas)
+        #for f, score in formulas.items():
+         #   print(f.to_str(lambda i: dataset["itos"][i], sort=True), score)
+        #input("trimmed beam")
 
     best = Counter(formulas).most_common(1)[0]
 
@@ -654,7 +677,7 @@ def to_sentence(toks, feats, dataset, tok_feats_vocab=None):
         }
 
     # Binary mask - encoder/decoder
-    token_masks = np.zeros((len(toks), len(tok_feats_vocab["stoi"])), dtype=np.bool)
+    token_masks = np.zeros((len(toks), len(tok_feats_vocab["stoi"])), dtype=np.bool_)
     for i, (encu, decu, enctagu, dectagu, oth) in enumerate(
         zip(
             encoder_uniques,
@@ -729,10 +752,9 @@ def main():
     print("Load predictions")
     mbase = os.path.splitext(os.path.basename(settings.MODEL))[0]
     dbase = os.path.splitext(os.path.basename(settings.DATA))[0]
-    predf = f"data/analysis/preds/{mbase}_{dbase}.csv"
+    predf = f"/home/thebub/UCSC/Neuron-Explanations/compexp/nli/data/analysis/preds/{mbase}_{dbase}.csv"
     # Add the feature activations so we can do correlation
     preds = pd.read_csv(predf)
-
     save_with_acts(preds, acts, os.path.join(settings.RESULT, "preds_acts.csv"))
 
     print("Visualizing features")

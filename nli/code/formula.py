@@ -123,9 +123,13 @@ class Or(BinaryNode):
 class And(BinaryNode):
     op = "AND"
 
+#Adding XOR operator
+class Xor(BinaryNode):
+    op = "XOR"
+
 
 UNARY_OPS = [Not, Neighbors, Hypernym]
-BINARY_OPS = [Or, And]
+BINARY_OPS = [Or, And, Xor]
 
 
 # The most unnecessary thing I've ever done
@@ -140,6 +144,8 @@ OR_ = pp.Keyword("OR")("operator")
 NOT_ = pp.Keyword("NOT")("operator")
 NEIGHBORS_ = pp.Keyword("NEIGHBORS")("operator")
 HYPERNYM_ = pp.Keyword("HYPERNYM")("operator")
+#add XOR
+XOR_ = pp.Keyword("XOR")("operator")
 
 expr = pp.operatorPrecedence(
     condition,
@@ -168,6 +174,11 @@ expr = pp.operatorPrecedence(
             OR_,
             2,
             pp.opAssoc.LEFT,
+        ),
+        (
+            XOR_,
+            2,
+            pp.opAssoc.LEFT
         ),
     ],
 )
@@ -206,6 +217,9 @@ def parse_flist(flist, reverse_namer):
             op = Or
         elif flist[1] == "AND":
             op = And
+        #adding xor
+        elif flist[1] == "XOR":
+            op = Xor
         else:
             raise ValueError(f"Unknown binary op {flist[1]}")
         left = parse_flist(flist[0], reverse_namer)
@@ -250,5 +264,15 @@ def minor_negate(f, hard=False):
             return Or(f.left, minor_negate(f.right, hard=hard))
         else:
             return Or(minor_negate(f.left, hard=hard), f.right)
+    #adding xor
+    elif isinstance(f, Xor):
+        if hard: 
+            cond = len(f.left) < len(f.right)
+        else: 
+            cond = random.random() < 0.5
+        if cond: 
+            return Xor(f.left, minor_negate(f.right, hard = hard))
+        else: 
+            return Xor(minor_negate(f.left, hard = hard), f.right)
     else:
         raise RuntimeError
