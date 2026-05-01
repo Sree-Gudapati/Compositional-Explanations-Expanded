@@ -4,7 +4,7 @@ Settings
 
 import os
 
-CUDA = True
+CUDA = False
 ALPHA = None  # Use "None" to use ReLU threshold (i.e., > 0)
 BEAM_SIZE = 10
 MAX_FORMULA_LENGTH = 5
@@ -21,19 +21,19 @@ NEURONS = None
 PARALLEL = 4
 
 SHUFFLE = False
-SAVE_EVERY = 4
+SAVE_EVERY = 1
 
 # How many "maximally activating" open features to use, PER CATEGORY
 MAX_OPEN_FEATS = 5
 # Minimum number of activations to analyze a neuron
 MIN_ACTS = 500
 
-MODEL = "models/bowman_snli/6.pth"
+MODEL = "/home/thebub/UCSC/Neuron-Explanations/compexp/nli/models/bowman_snli/6.pth"
 MODEL_TYPE = "bowman"  # choices: bowman, minimal
 RANDOM_WEIGHTS = False  # Initialize weights randomly (equivalent to an untrained model)
-N_SENTENCE_FEATS = 2000  # how many of the most common sentence lemmas to keep
+N_SENTENCE_FEATS = 1000  # how many of the most common sentence lemmas to keep
 
-DATA = "data/analysis/snli_1.0_dev.feats"
+DATA = "/home/thebub/UCSC/Neuron-Explanations/compexp/nli/data/analysis/snli_1.0_dev.feats"
 
 assert DATA.endswith(".feats")
 VECPATH = DATA.replace(".feats", ".vec")
